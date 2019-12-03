@@ -1,5 +1,5 @@
 FROM golang:1.13-buster
-RUN apt-get update && apt-get -y install git build-essential libfuse-dev kmod && apt-get clean
+RUN apt-get update && apt-get -y --no-install-recommends install git build-essential libfuse-dev kmod && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /go/src/github.com/trevor403/random
 COPY cmd cmd

@@ -1,0 +1,6 @@
+FROM debian:buster
+
+RUN apt-get update && apt-get install -y --no-install-recommends rng-tools && rm -rf /var/lib/apt/lists/*
+COPY test.sh .
+
+ENTRYPOINT ["./test.sh"]

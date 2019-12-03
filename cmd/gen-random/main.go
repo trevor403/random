@@ -3,8 +3,8 @@ package main
 // Permutation congruential generators
 
 import (
+	"fmt"
 	"math/rand"
-	"os"
 	"time"
 
 	"github.com/trevor403/random/pkg/linear"
@@ -24,9 +24,15 @@ func main() {
 	pcg := linear.NewPcg32(seed)
 	rng := rand.New(pcg)
 
-	buf := make([]byte, 1<<16)
-	for {
-		rng.Read(buf)
-		os.Stdout.Write(buf)
+	fmt.Println("==== Get Random numbers (64bits):")
+	for i := 0; i < 10; i++ {
+		val := rng.Uint64()
+		fmt.Printf("[ %d ]\t%d\n", i, val)
+	}
+
+	fmt.Println("==== Get Random number (1-10):")
+	for i := 0; i < 10; i++ {
+		val := getRandRange(1, 10, rng)
+		fmt.Printf("[ %d ]\t%d\n", i, val)
 	}
 }

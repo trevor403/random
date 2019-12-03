@@ -1,8 +1,18 @@
 version: "3.7"
 services:
   srandom_cuse:
-    image: srandom:v0.1.0
+    image: srandom:v0.2.0
     build: .
     devices:
     - '/dev/cuse:/dev/cuse:mrw'
     network_mode: none
+
+  srandom_test:
+    image: rngtest:v0.1.0
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+    - srandom_cuse
+    devices:
+    - '/dev/srandom:/dev/srandom:mrw'
