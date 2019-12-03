@@ -1,41 +1,56 @@
 package linear
 
-import (
-	"math/big"
+// Algorithm is a Permutation Congruential Generators (PCG)
+// |- Implementation is PCG-XSH-RR built on top of a 64-bit LCG
+//   |- Page 37 http://www.pcg-random.org/pdf/toms-oneill-pcg-family.pdf
+// |- Multiplier from L'Ecuye tables
+//   |- Page 10 https://www.ams.org/journals/mcom/1999-68-225/S0025-5718-99-00996-5/S0025-5718-99-00996-5.pdf
+// |- Increment from the PCG reference implementation
+
+const (
+	multiplier uint64 = 2862933555777941757
+	increment  uint64 = 1442695040888963407
+
+	mask uint64 = (1 << 64) - 1
 )
 
-var streamer, _ = big.NewInt(0).SetString("117397592171526113268558934119004209487", 10)
-
-// Ferrier's Prime is really interested
-// it is the larges prime ever computed without electronic assistance
-const ferrierPrimeString = "20988936657440586486151264256610222593863921"
-
-// 144 bit number can not use a built-in data-type
-var ferrierPrime, _ = new(big.Int).SetString(ferrierPrimeString, 10)
-
-type CongruentialGenerator struct {
-	State, Stream, Multiplier *big.Int
+type Pcg32 struct {
+	state uint64
 }
 
-func NewCongruentialGenerator(seed *big.Int) *CongruentialGenerator {
-	return &CongruentialGenerator{seed, streamer, ferrierPrime}
+func NewPcg32(seed int64) *Pcg32 {
+	pcg := &Pcg32{}
+	pcg.Seed(seed)
+
+	return pcg
 }
 
-func (gen *CongruentialGenerator) Seed(s int64) {
-	high := new(big.Int).Lsh(big.NewInt(s), 64)
-	low := big.NewInt(s)
-	gen.State = new(big.Int).Add(high, low)
+func (pcg *Pcg32) Seed(s int64) {
+	seed := uint64(s)
+	pcg.state = increment + (seed & mask)
+	pcg.Step()
 }
 
-func (gen *CongruentialGenerator) Next() *big.Int {
-	gen.State = new(big.Int).Mul(gen.State, gen.Multiplier)
-	gen.State = new(big.Int).Add(gen.State, gen.Stream)
-	return gen.State
+func (pcg *Pcg32) Step() {
+	pcg.state = (pcg.state * multiplier) + (increment & mask)
 }
 
-func (gen *CongruentialGenerator) Int63() int64 {
-	n := gen.Next()
-	high := new(big.Int).Rsh(n, 64).Int64()
-	low := n.Int64()
-	return int64((high ^ low) >> 1)
+func (pcg *Pcg32) Next() uint32 {
+	pcg.Step()
+	state := pcg.state
+	rot := uint32(state >> 59)
+	shift := uint32(((state >> 18) ^ state) >> 27)
+	output := (shift >> rot) | (shift << (32 - rot))
+	return output
+}
+
+func (pcg *Pcg32) Int63() int64 {
+	return int64(pcg.Uint64() >> 1)
+}
+
+func (pcg *Pcg32) Uint64() uint64 {
+	high := pcg.Next()
+	low := pcg.Next()
+
+	return uint64(high)<<32 | uint64(low)
 }

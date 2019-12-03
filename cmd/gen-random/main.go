@@ -1,14 +1,11 @@
 package main
 
-// linear congruential generators
+// Permutation congruential generators
 
 import (
-	"fmt"
-	"math/big"
 	"math/rand"
+	"os"
 	"time"
-
-	"log"
 
 	"github.com/trevor403/random/pkg/linear"
 )
@@ -22,20 +19,14 @@ func getRandRange(min, max int, rng *rand.Rand) int {
 
 func main() {
 	// use time as seed
-	seed := big.NewInt(time.Now().Unix())
+	seed := time.Now().Unix()
 
-	lcg := linear.NewCongruentialGenerator(seed)
-	rng := rand.New(lcg)
+	pcg := linear.NewPcg32(seed)
+	rng := rand.New(pcg)
 
-	for i := 0; i < 20; i++ {
-		val := rng.Uint64()
-		log.Printf("Random number (64bits):\t%d", val)
-	}
-
-	fmt.Println("") // spacer
-
-	for i := 0; i < 20; i++ {
-		val := getRandRange(1, 10, rng)
-		log.Printf("Random number (1-10):\t%d", val)
+	buf := make([]byte, 1<<16)
+	for {
+		rng.Read(buf)
+		os.Stdout.Write(buf)
 	}
 }
